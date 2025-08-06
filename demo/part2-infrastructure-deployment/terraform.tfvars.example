@@ -1,0 +1,20 @@
+# Example terraform.tfvars file for Part 2: Infrastructure Deployment
+# Copy this file to terraform.tfvars and fill in your actual values
+
+# Akeyless Configuration
+akeyless_gateway_address = "https://api.akeyless.io"  # or your custom gateway
+
+# Akeyless API Key Authentication
+# These credentials should be generated from the API Key authentication method created in Part 1
+akeyless_access_id  = "your-akeyless-access-id"     # From the auth method created in Part 1
+akeyless_access_key = "your-akeyless-access-key"    # Generated access key
+
+# AWS Configuration
+aws_region = "us-west-2"  # Should match the region used in Part 1
+
+# Notes:
+# - The akeyless_access_id and akeyless_access_key are different from Part 1
+# - In Part 1, we used AWS IAM authentication to CREATE the Akeyless infrastructure
+# - In Part 2, we use API Key authentication to RETRIEVE secrets from Akeyless
+# - The dynamic AWS credentials will be automatically retrieved from Akeyless
+# - Ensure the role created in Part 1 has proper permissions to access the secrets
