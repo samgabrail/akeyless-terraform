@@ -9,14 +9,14 @@ The demo is split into two parts that demonstrate both angles of Akeyless + Terr
 ### Part 1: Configure Akeyless with Terraform
 - Set up Akeyless infrastructure using Terraform
 - Create authentication methods, roles, and permissions
-- Configure static secrets and dynamic secret producers
-- Establish AWS targets for dynamic credential generation
+- Configure static secrets including database passwords and API keys
+- Store configuration data for infrastructure deployment
 
 ### Part 2: Use Akeyless Secrets in Terraform
-- Retrieve secrets from Akeyless during Terraform execution
-- Use dynamic AWS credentials to authenticate AWS provider
-- Deploy AWS infrastructure (S3 bucket) using secrets from Akeyless
-- Demonstrate secure infrastructure provisioning
+- Retrieve static secrets from Akeyless during Terraform execution
+- Use retrieved configuration data to deploy AWS infrastructure
+- Deploy AWS DynamoDB table with sample data
+- Demonstrate secure infrastructure provisioning using static secrets
 
 ## 🏗️ Architecture
 
@@ -37,9 +37,9 @@ The demo is split into two parts that demonstrate both angles of Akeyless + Terr
 │ Part 2: Deploy  │    ┌─────────────────┐            │
 │ • Retrieve      │◀───│  Retrieved      │            │
 │   Secrets       │    │  Secrets:       │            │
-│ • Use Dynamic   │    │  • Static API   │            │
-│   AWS Creds     │    │  • Dynamic AWS  │────────────┘
-│ • Deploy S3     │    │    Credentials  │
+│ • Use Static    │    │  • DB Password  │            │
+│   Secrets       │    │  • API Keys     │────────────┘
+│ • Deploy DynamoDB│    │  • Config Data  │
 └─────────────────┘    └─────────────────┘
 ```
 
@@ -48,7 +48,7 @@ The demo is split into two parts that demonstrate both angles of Akeyless + Terr
 ### Prerequisites
 
 1. **Akeyless Account**: Sign up at [akeyless.io](https://akeyless.io)
-2. **AWS Account**: With permissions to create IAM users and S3 buckets
+2. **AWS Account**: With permissions to create DynamoDB tables
 3. **Terraform**: Version 1.6 or later
 4. **AWS CLI**: Configured with credentials
 
@@ -136,9 +136,9 @@ terraform output
 
 This demonstrates:
 - 🔐 Retrieving static secrets from Akeyless
-- 🔄 Getting dynamic AWS credentials from Akeyless
-- 🪣 Using dynamic credentials to create S3 bucket
-- 🏷️ Tagging resources with secret values (safely)
+- 📊 Using configuration data to deploy infrastructure
+- 🗄️ Creating DynamoDB table with retrieved settings
+- 🏷️ Populating sample data using secure credentials
 
 ## 📁 File Structure
 
@@ -164,11 +164,11 @@ demo/
 ### ⚠️ Important Security Notes
 
 1. **State File Security**: Secret values retrieved via data sources are stored in Terraform state files. Ensure your state files are:
-   - Encrypted at rest (use S3 backend with encryption)
+   - Encrypted at rest (use remote backend with encryption)
    - Access-controlled (limit who can read state files)
    - Never committed to version control
 
-2. **Dynamic Credentials**: Dynamic AWS credentials from Akeyless automatically expire (1-hour TTL), reducing long-term exposure risk.
+2. **Static Secrets Management**: While this demo uses static secrets for simplicity, Akeyless also supports dynamic credentials for advanced use cases.
 
 3. **Zero-Trust Architecture**: Akeyless uses fragment-based storage - secrets are never stored complete anywhere.
 
@@ -203,15 +203,15 @@ demo/
    - Update terraform.tfvars
 
 2. **Deploy Infrastructure** (4-5 mins)
-   - Show the Terraform configuration that retrieves secrets
-   - Run `terraform plan` - explain how secrets are retrieved
+   - Show the Terraform configuration that retrieves static secrets
+   - Run `terraform plan` - explain how secrets are retrieved at runtime
    - Execute `terraform apply`
-   - Show AWS resources being created with dynamic credentials
+   - Show DynamoDB table being created with retrieved configuration
 
 3. **Verify Results** (2 mins)
-   - Show created S3 bucket in AWS console
-   - Demonstrate that secrets were used (check tags)
-   - Show demo object with secret values
+   - Show created DynamoDB table in AWS console
+   - Demonstrate that secrets were used to configure the table
+   - Show sample data items populated in the table
 
 ## 🧹 Cleanup
 
@@ -241,12 +241,12 @@ terraform destroy
 **Permission Errors (Part 2)**
 - Verify the role created in Part 1 has proper access rules
 - Check that API Key was generated from the correct auth method
-- Ensure dynamic secret producer is properly configured
+- Ensure the role has read access to the static secret paths
 
 **AWS Credential Issues**
-- Verify dynamic AWS credentials have proper IAM permissions
-- Check that the AWS target in Akeyless is correctly configured
-- Ensure the base AWS credentials can create IAM users
+- Verify AWS credentials have proper DynamoDB permissions
+- Check that terraform.tfvars contains valid AWS credentials
+- Ensure the AWS region is correctly configured
 
 ### Debug Commands
 

@@ -22,9 +22,11 @@ We'll prove it by showing how to securely store secrets, manage sensitive inform
 - **Enhanced Security**: Distributed fragments approach eliminates single points of failure and security breaches
 - **Infrastructure as Code Support**: Native Terraform integration with role based access control and secret rotation capabilities
 
-## Two Integration Angles
+## Two Integration Parts
 
-### Angle 1: Managing Akeyless as Code
+![Akeyless + Terraform: Two-Part Integration Flow](images/01-architecture-flow.png)
+
+### Part 1: Managing Akeyless as Code
 **Use Case**: Using infrastructure as code to configure your secret management tools
 
 #### What We'll Demonstrate with Terraform Configuration:
@@ -164,7 +166,7 @@ resource "akeyless_role_rule" "static_access" {
 
 This completes our access control setup, applying the least privilege principle to ensure only authorized access to our secrets secure storage.
 
-### Angle 2: Using Akeyless Secrets to Build Infrastructure  
+### Part 2: Using Akeyless Secrets to Build Infrastructure  
 **Use Case**: Leveraging secret management tools for secure cloud services deployment
 
 #### What We'll Demonstrate for Static Secret Management:

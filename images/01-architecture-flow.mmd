@@ -1,0 +1,24 @@
+graph TB
+    subgraph P1["Part 1: Managing Akeyless"]
+        A1[Terraform Configuration] --> A2[Akeyless Provider]
+        A2 --> A3[Authentication Methods]
+        A2 --> A4[Static Secrets]
+        A2 --> A5[Access Roles]
+        A2 --> A6[Role Rules]
+        A3 --> A7[("🔐<br/>Secrets Management<br/>Infrastructure")]
+    end
+    
+    subgraph P2["Part 2: Build Infra"]
+        B1[("🔐<br/>Akeyless<br/>Static Secrets")] --> B2[Terraform Data Sources]
+        B2 --> B3[Retrieved Secrets]
+        B3 --> B4[AWS Provider]
+        B4 --> B5[DynamoDB Table]
+        B4 --> B6[Sample Data]
+        B5 --> B7[("☁️<br/>Cloud<br/>Infrastructure")]
+    end
+    
+    A7 -.->|"Secrets Available"| B1
+    
+    style A7 fill:#e1f5fe
+    style B7 fill:#f3e5f5
+    style B1 fill:#e8f5e8

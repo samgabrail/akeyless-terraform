@@ -10,7 +10,7 @@ akeyless_access_id  = "your-akeyless-access-id"     # From the auth method creat
 akeyless_access_key = "your-akeyless-access-key"    # Generated access key
 
 # AWS Configuration
-aws_region = "us-west-2"  # Should match the region used in Part 1
+aws_region = "us-east-1"  # Should match the region used in Part 1
 
 # Notes:
 # - The akeyless_access_id and akeyless_access_key are different from Part 1
