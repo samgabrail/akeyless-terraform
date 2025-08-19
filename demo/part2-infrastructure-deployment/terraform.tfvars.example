@@ -16,5 +16,4 @@ aws_region = "us-east-1"  # Should match the region used in Part 1
 # - The akeyless_access_id and akeyless_access_key are different from Part 1
 # - In Part 1, we used AWS IAM authentication to CREATE the Akeyless infrastructure
 # - In Part 2, we use API Key authentication to RETRIEVE secrets from Akeyless
-# - The dynamic AWS credentials will be automatically retrieved from Akeyless
 # - Ensure the role created in Part 1 has proper permissions to access the secrets

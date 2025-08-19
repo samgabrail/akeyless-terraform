@@ -39,6 +39,18 @@ resource "akeyless_auth_method_api_key" "terraform_auth" {
 # Create access role
 resource "akeyless_role" "terraform_role" {
   name = "/terraform-demo/role"
+  
+  rules {
+    capability = ["read", "list"]
+    path       = "/terraform-demo/static/*"
+    rule_type  = "item-rule"
+  }
+}
+
+# Associate the access role with the auth method
+resource "akeyless_associate_role_auth_method" "terraform_auth_association" {
+  am_name   = akeyless_auth_method_api_key.terraform_auth.name
+  role_name = akeyless_role.terraform_role.name
 }
 
 # Create static secret (external API key example)

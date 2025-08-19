@@ -27,8 +27,6 @@ The demo is split into two parts that demonstrate both angles of Akeyless + Terr
 │ Part 1: Setup   │───▶│ Auth Methods    │    │                 │
 │ • Auth Methods  │    │ Roles & Rules   │    │                 │
 │ • Static Secrets│    │ Static Secrets  │    │                 │
-│ • Dynamic Setup │    │ Dynamic Secrets │    │                 │
-│                 │    │ AWS Target      │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │                       ▲
 ┌─────────────────┐            │                       │
@@ -106,8 +104,7 @@ This creates:
 - ✅ API Key authentication method
 - ✅ Access role with proper permissions
 - ✅ Static secrets (API key, DB config)
-- ✅ AWS target for dynamic secrets
-- ✅ AWS dynamic secret producer
+
 
 ### Step 4: Generate API Key for Part 2
 

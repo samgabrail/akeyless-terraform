@@ -4,14 +4,3 @@
 # Akeyless Configuration
 akeyless_gateway_address = "https://api.akeyless.io"  # or your custom gateway
 aws_iam_access_id       = "your-aws-iam-access-id-from-akeyless"
-
-# AWS Credentials for Target Creation
-aws_access_key_id     = "AKIA..."  # AWS Access Key with appropriate permissions
-aws_secret_access_key = "your-secret-key"
-aws_region           = "us-east-1"
-
-# Notes:
-# - aws_iam_access_id: This is the Access ID from your Akeyless AWS IAM authentication method
-# - aws_access_key_id/aws_secret_access_key: These are used to create the AWS target in Akeyless
-#   The target will use these credentials to generate dynamic AWS credentials
-# - Ensure your AWS credentials have permissions to create IAM users (for dynamic secrets)
