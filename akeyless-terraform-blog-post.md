@@ -345,64 +345,6 @@ output "secrets_used" {
 
 Notice how outputs containing sensitive values are marked appropriately, ensuring the state file handles secrets securely while providing visibility into which secret paths were used.
 
-## Akeyless vs HashiCorp Vault: A Practical Comparison
-
-Let's examine the real operational differences between Akeyless and HashiCorp Vault for terraform secrets management:
-
-| Feature | Akeyless | HashiCorp Vault (Self-Hosted) |
-|:---|:---|:---|
-| **Backend Setup** | SaaS (Zero setup) | Manage Raft/Consul storage, backups |
-| **High Availability** | Built-in across regions | Manual clustering, load balancing |
-| **Unsealing** | Not required | Manual or auto-unseal configuration |
-| **Terraform Code Complexity** | Simple `akeyless_static_secret` resources | Multiple `vault_generic_secret` + mount configs |
-| **Infrastructure Overhead** | None, fully managed | Servers, networking, storage management |
-| **Access Control** | Built-in role based access control | Complex policy language and auth methods |
-| **Secret Rotation** | Automated with configurable policies | Manual configuration of rotation workflows |
-
-### Code Comparison: Creating Static Secrets
-
-**Akeyless Terraform Configuration:**
-```hcl
-resource "akeyless_static_secret" "db_password" {
-  path  = "/app/db-password"
-  value = var.secure_password
-}
-
-resource "akeyless_role_rule" "app_access" {
-  role_name  = akeyless_role.app_role.name
-  path       = "/app/*"
-  capability = ["read"]
-}
-```
-
-**HashiCorp Vault Terraform Configuration:**
-```hcl
-resource "vault_mount" "kvv2" {
-  path = "secret"
-  type = "kv"
-  options = { version = "2" }
-}
-
-resource "vault_generic_secret" "db_password" {
-  path = "secret/app/db-password"
-  data_json = jsonencode({
-    password = var.secure_password
-  })
-  depends_on = [vault_mount.kvv2]
-}
-
-resource "vault_policy" "app_policy" {
-  name = "app-policy"
-  policy = <<EOT
-path "secret/data/app/*" {
-  capabilities = ["read"]
-}
-EOT
-}
-```
-
-The difference is clear: Akeyless requires significantly less configuration and no infrastructure management overhead.
-
 **⚠️ Important Security Note for State File Management**: While this demo shows how to retrieve secret values in Terraform, be aware that retrieved secrets are stored in the terraform configuration state file. Always ensure your state files are properly secured with encryption at rest and access control, preventing data breaches from exposed state files. Consider using backend configuration with encryption keys and AWS KMS key integration for additional protection.
 
 **Future Security Enhancements**: Terraform 1.10+ introduces ephemeral resources and 1.11+ adds write-only attributes that eliminate secrets from state files entirely. While the Akeyless provider doesn't yet support these advanced features, they represent the future of secure terraform secrets management where sensitive values never persist in state, providing better protection than traditional secrets manager defaults.
