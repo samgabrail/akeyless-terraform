@@ -2,7 +2,9 @@
 
 ## Executive Summary
 
-This blog post and demo showcase how Akeyless integrates seamlessly with Terraform for managing sensitive data in cloud infrastructure. We'll demonstrate how leveraging secret management tools like Akeyless provides a superior alternative to traditional secrets manager solutions. Learn how to securely store secrets, manage sensitive information, and protect against data breaches while maintaining compliance with version control systems and terraform configuration best practices.
+If you're a Terraform user, you've likely heard of, or are already using, HashiCorp Vault for managing secrets. It's the default choice for many DevOps teams. But what if there was a more cloud-native, operationally simpler way to achieve powerful secrets management directly in your terraform configuration? This blog post demonstrates that Akeyless isn't just an alternative to traditional secret management tools, it's a better fit for modern infrastructure as code workflows.
+
+We'll prove it by showing how to securely store secrets, manage sensitive information, and protect against data breaches using static secrets that flow seamlessly through your cloud infrastructure without complex backend configuration or clustering requirements.
 
 ## Target Audience
 - DevOps Engineers managing cloud resources and terraform code
@@ -22,18 +24,17 @@ This blog post and demo showcase how Akeyless integrates seamlessly with Terrafo
 
 ## Two Integration Angles
 
-### Angle 1: Infrastructure as Code for Secret Management Tools
-**Use Case**: Using Terraform Secrets management through Infrastructure as Code
+### Angle 1: Managing Akeyless as Code
+**Use Case**: Using infrastructure as code to configure your secret management tools
 
 #### What We'll Demonstrate with Terraform Configuration:
-- Deploying secret management tools using the AWS Provider and Akeyless Terraform Provider
-- Configure authentication methods with role based access control
-- Create and manage static secrets including API keys and database credentials
-- Set up dynamic secret engines for AWS Secrets Manager integration
+- Configure authentication methods with role based access control using the Akeyless Terraform Provider
+- Create and manage static secrets including API keys and database credentials  
 - Implement access control policies with least privilege principle
-- Configure secret rotation for enhanced security
+- Store configuration data as key value pairs for infrastructure deployment
+- Establish secure secrets management without complex vault provider clustering
 
-#### Demo Scenario - Part 1: Terraform Configuration for Managing Secrets Infrastructure
+#### Demo Scenario Part 1: Terraform Configuration for Managing Secrets Infrastructure
 
 Setting up the foundation with proper terraform configuration and handling secrets securely:
 **Step 1: Provider Configuration Block**
@@ -163,16 +164,16 @@ resource "akeyless_role_rule" "static_access" {
 
 This completes our access control setup, applying the least privilege principle to ensure only authorized access to our secrets secure storage.
 
-### Angle 2: How to Handle Secrets in Terraform with AWS Secrets Manager Alternative
+### Angle 2: Using Akeyless Secrets to Build Infrastructure  
 **Use Case**: Leveraging secret management tools for secure cloud services deployment
 
-#### What We'll Demonstrate for Environment Variables and Secret Values:
-- Reading secrets from Akeyless instead of AWS Secrets Manager during terraform apply
-- Using retrieved secret values to provision cloud infrastructure with proper encryption
+#### What We'll Demonstrate for Static Secret Management:
+- Reading static secrets from Akeyless instead of AWS Secrets Manager during terraform apply
+- Using retrieved secret values and configuration data to provision cloud infrastructure  
 - Runtime secret retrieval ensuring zero secrets exposure in terraform configuration files
-- Best practices for managing sensitive information in the state file and cloud provider integrations
+- Best practices for managing sensitive information including database credentials and API keys
 
-#### Demo Scenario - Part 2: Terraform Secrets Retrieval and AWS Infrastructure Deployment
+#### Demo Scenario Part 2: Terraform Secrets Retrieval and AWS Infrastructure Deployment
 This section demonstrates how to read secrets from your secret management tools and use them with cloud resources.
 
 **Step 1: Multi-Provider Configuration for Cloud Infrastructure**
@@ -306,7 +307,7 @@ resource "aws_dynamodb_table_item" "demo_items" {
       S = "Retrieved from ${data.akeyless_secret.db_password.path}"
     }
     security_note = {
-      S = "All credentials fetched at runtime - zero secrets exposure in configuration"
+      S = "All credentials fetched at runtime, zero secrets exposure in configuration"
     }
   })
 }
@@ -344,6 +345,64 @@ output "secrets_used" {
 
 Notice how outputs containing sensitive values are marked appropriately, ensuring the state file handles secrets securely while providing visibility into which secret paths were used.
 
+## Akeyless vs HashiCorp Vault: A Practical Comparison
+
+Let's examine the real operational differences between Akeyless and HashiCorp Vault for terraform secrets management:
+
+| Feature | Akeyless | HashiCorp Vault (Self-Hosted) |
+|:---|:---|:---|
+| **Backend Setup** | SaaS (Zero setup) | Manage Raft/Consul storage, backups |
+| **High Availability** | Built-in across regions | Manual clustering, load balancing |
+| **Unsealing** | Not required | Manual or auto-unseal configuration |
+| **Terraform Code Complexity** | Simple `akeyless_static_secret` resources | Multiple `vault_generic_secret` + mount configs |
+| **Infrastructure Overhead** | None, fully managed | Servers, networking, storage management |
+| **Access Control** | Built-in role based access control | Complex policy language and auth methods |
+| **Secret Rotation** | Automated with configurable policies | Manual configuration of rotation workflows |
+
+### Code Comparison: Creating Static Secrets
+
+**Akeyless Terraform Configuration:**
+```hcl
+resource "akeyless_static_secret" "db_password" {
+  path  = "/app/db-password"
+  value = var.secure_password
+}
+
+resource "akeyless_role_rule" "app_access" {
+  role_name  = akeyless_role.app_role.name
+  path       = "/app/*"
+  capability = ["read"]
+}
+```
+
+**HashiCorp Vault Terraform Configuration:**
+```hcl
+resource "vault_mount" "kvv2" {
+  path = "secret"
+  type = "kv"
+  options = { version = "2" }
+}
+
+resource "vault_generic_secret" "db_password" {
+  path = "secret/app/db-password"
+  data_json = jsonencode({
+    password = var.secure_password
+  })
+  depends_on = [vault_mount.kvv2]
+}
+
+resource "vault_policy" "app_policy" {
+  name = "app-policy"
+  policy = <<EOT
+path "secret/data/app/*" {
+  capabilities = ["read"]
+}
+EOT
+}
+```
+
+The difference is clear: Akeyless requires significantly less configuration and no infrastructure management overhead.
+
 **⚠️ Important Security Note for State File Management**: While this demo shows how to retrieve secret values in Terraform, be aware that retrieved secrets are stored in the terraform configuration state file. Always ensure your state files are properly secured with encryption at rest and access control, preventing data breaches from exposed state files. Consider using backend configuration with encryption keys and AWS KMS key integration for additional protection.
 
 **Future Security Enhancements**: Terraform 1.10+ introduces ephemeral resources and 1.11+ adds write-only attributes that eliminate secrets from state files entirely. While the Akeyless provider doesn't yet support these advanced features, they represent the future of secure terraform secrets management where sensitive values never persist in state, providing better protection than traditional secrets manager defaults.
@@ -352,17 +411,17 @@ Notice how outputs containing sensitive values are marked appropriately, ensurin
 
 Our demonstration showcases a practical two-part workflow for managing sensitive data that DevOps teams can implement immediately to prevent security breaches:
 
-### Part 1: Infrastructure as Code for Secret Management Tools (5-7 minutes)
-We use terraform code to configure our entire secrets management infrastructure, creating authentication methods with role based access control, and securely storing database credentials and API keys. This infrastructure as code approach ensures reproducible, version-controlled secrets management while maintaining compliance with version control systems best practices.
+### Part 1: Infrastructure as Code for Static Secret Management (5-7 minutes)
+We use terraform code to configure our entire secrets management infrastructure, creating authentication methods with role based access control, and securely storing static secrets including database credentials, API keys, and configuration data. This infrastructure as code approach ensures reproducible, version-controlled secrets management while maintaining compliance with version control systems best practices.
 
-### Part 2: Secure Cloud Resources Deployment with Environment Variables (6-8 minutes)
-We read secrets from our secret management tools at runtime, then use these credentials to provision AWS cloud resources including DynamoDB tables with sample data. This demonstrates how sensitive information flows securely through your cloud infrastructure without ever being exposed in terraform configuration files or code repositories, providing superior protection against data breaches and security breaches.
+### Part 2: Secure Cloud Resources Deployment Using Static Secrets (6-8 minutes)  
+We read static secrets and configuration data from our secret management tools at runtime, then use this information to provision AWS cloud resources including DynamoDB tables with sample data. This demonstrates how sensitive information flows securely through your cloud infrastructure without ever being exposed in terraform configuration files or code repositories, providing superior protection against data breaches.
 
 ## Akeyless Architecture & Benefits: Advanced Secret Management Tools vs Traditional Solutions
 
 ### Zero-Trust Security Model for Encrypting Sensitive Data
 
-**Fragment-Based Architecture - Superior to HashiCorp Vault**
+**Fragment-Based Architecture, Superior to HashiCorp Vault**
 - Secrets are never stored in complete form anywhere, unlike traditional secrets manager solutions
 - Distributed fragments across multiple secure locations prevent data breaches
 - No single point of failure or compromise compared to centralized vault secrets storage
@@ -374,19 +433,22 @@ We read secrets from our secret management tools at runtime, then use these cred
 - Automatic secret rotation and lifecycle management for database credentials and API keys
 - Built-in least privilege principle enforcement through granular access control policies
 
-### Operational Simplicity for Managing Secrets vs HashiCorp Vault
+### Why Akeyless Outperforms AWS Secrets Manager and HashiCorp Vault
 
-**Minimal Infrastructure Requirements - No Complex Backend Configuration**
+**Operational Simplicity, No Complex Backend Configuration**
 - SaaS-first deployment with optional on-premises gateways
 - No servers to maintain, patch, or backup unlike HashiCorp Vault clustering
 - No complex clustering or high-availability setup required
 - Eliminates infrastructure overhead that comes with traditional vault provider solutions
 
+**Superior Integration Compared to AWS Secrets Manager**
+Akeyless provides significant advantages over AWS Secrets Manager: no AWS Secrets Manager waits for secret retrieval, more advanced secret rotation capabilities, better access control with role based access control, and support for multi-cloud environments beyond just AWS. Unlike AWS Secrets Manager which only accepts boolean and default value configurations, Akeyless offers flexible secret management with comprehensive terraform provider support.
+
 **Native Terraform Integration for Infrastructure as Code**
 - Purpose-built terraform provider with 30+ resources for complete secrets management
 - Complete infrastructure as code support for managing sensitive information
-- Automatic state management for dynamic secrets including AWS secrets manager integration
-- Superior to AWS Secrets Manager waits and default value configurations in cloud services
+- Automatic state management for static secrets and configuration data
+- Simple key value pairs storage without complex mount configurations required by vault provider
 
 ### Multi-Cloud Excellence for Cloud Services and Infrastructure
 
@@ -403,8 +465,8 @@ Ready to transform your infrastructure secrets management and prevent security b
 ### 1. Try the Infrastructure as Code Demo
 Clone our complete working example from GitHub and run it in your own environment. The two-part demo takes less than 15 minutes to complete and demonstrates the full terraform configuration integration with secure secret values handling.
 
-### 2. Start Your Free Trial - Superior to AWS Secrets Manager 
-Get started with Akeyless free for 30 days - no credit card required. The SaaS platform is ready immediately for managing secrets in cloud infrastructure, or deploy on-premises gateways if needed for air-gapped environments.
+### 2. Start Your Free Trial, Superior to AWS Secrets Manager 
+Get started with Akeyless free for 30 days, no credit card required. The SaaS platform is ready immediately for managing secrets in cloud infrastructure, or deploy on-premises gateways if needed for air-gapped environments.
 
 ### 3. Migration Support from HashiCorp Vault and AWS Secrets Manager
 Our solutions architects provide free consultation to help plan your migration from existing secret management tools. We've helped hundreds of teams transition from HashiCorp Vault, AWS Secrets Manager, and other traditional secrets manager platforms to our advanced secret rotation and role based access control system.
@@ -421,23 +483,15 @@ Akeyless offers several key advantages over traditional vault provider solutions
 
 ### How to Handle Secrets in Terraform State File without Data Leakage?
 
-While current terraform configuration versions store retrieved secret values in the state file, you can minimize exposure through proper state encryption and access control policies. Use backend configuration with encryption keys, AWS KMS key integration, and secure state file storage to prevent data breaches. Terraform 1.10+ introduces ephemeral resources and 1.11+ adds write-only attributes that will eliminate secrets from state entirely - advanced features we're working to support in future provider releases for managing sensitive information without state file exposure.
+While current terraform configuration versions store retrieved secret values in the state file, you can minimize exposure through proper state encryption and access control policies. Use backend configuration with encryption keys, AWS KMS key integration, and secure state file storage to prevent data breaches. Terraform 1.10+ introduces ephemeral resources and 1.11+ adds write-only attributes that will eliminate secrets from state entirely. These are advanced features we're working to support in future provider releases for managing sensitive information without state file exposure.
 
 ### What Types of Secret Values Can Akeyless Manage for Infrastructure as Code?
 
-Akeyless supports comprehensive secrets management including static secrets (API keys, database credentials, certificates), dynamic secrets (AWS/Azure/GCP credentials, database username authentication), and configuration data in key value pairs format. Our demo shows database password management with secret rotation, but you can also manage cloud provider credentials, SSH keys, encryption keys, TLS certificates, and environment variables for cloud services deployment using terraform code.
+Akeyless supports comprehensive secrets management including static secrets (API keys, database credentials, certificates), and configuration data in key value pairs format, as demonstrated in our terraform code examples. You can manage database credentials, SSH keys, encryption keys, TLS certificates, and environment variables for cloud services deployment. While Akeyless also supports dynamic secrets for advanced use cases, our demo focuses on the most common pattern: static secrets for database passwords, API keys, and configuration data that flows securely through your terraform configuration.
 
-### How Does Akeyless Compare to AWS Secrets Manager for Terraform Integration?
+### How Does Akeyless Prevent Security Breaches with Advanced Architecture?
 
-Akeyless provides superior benefits over AWS Secrets Manager: no AWS Secrets Manager waits for secret retrieval, more advanced secret rotation capabilities, better access control with role based access control, and support for multi-cloud environments beyond just AWS. Unlike AWS Secrets Manager which only accepts boolean and default value configurations, Akeyless offers flexible secret management with comprehensive terraform provider support, preventing vendor lock-in while providing enhanced security through fragment-based architecture that AWS Secrets Manager lacks.
-
-### How Does Akeyless Encrypt Sensitive Data to Prevent Security Breaches?
-
-Akeyless uses advanced fragment-based architecture where secrets are distributed across multiple secure locations and never stored complete anywhere, providing superior protection against data breaches compared to traditional secrets manager solutions. This zero-trust approach eliminates single points of failure and provides stronger security than encrypted storage solutions like Azure Key Vault or conventional vault secrets storage. Our advanced secret rotation and access control prevent security breaches that commonly occur with exposed secrets in code repositories or unencrypted state files.
-
-### What are the Key Points for Migrating from AWS Secrets Manager to Akeyless?
-
-Key migration considerations include: mapping existing secret name patterns to Akeyless paths, implementing role based access control policies, configuring secret rotation schedules, and updating terraform code to use Akeyless data sources instead of AWS Secrets Manager. The migration eliminates AWS Secrets Manager waits and default value limitations while providing superior multi-cloud secrets management. Our migration tools help transition database credentials, API keys, and encryption keys while maintaining security best practices and preventing compliance violations during the transition.
+Akeyless uses advanced fragment-based architecture where secrets are distributed across multiple secure locations and never stored complete anywhere, providing superior protection against data breaches compared to traditional secrets manager solutions. This zero-trust approach eliminates single points of failure and provides stronger security than encrypted storage solutions like Azure Key Vault or conventional vault secrets storage.
 
 ### How to Configure Vault Provider Migration from HashiCorp Vault to Akeyless?
 
