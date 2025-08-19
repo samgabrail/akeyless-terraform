@@ -7,7 +7,7 @@ If you're a Terraform user, you've likely heard of, or are already using, HashiC
 We'll prove it by showing how to securely store secrets, manage sensitive information, and protect against data breaches using static secrets that flow seamlessly through your cloud infrastructure without complex backend configuration or clustering requirements.
 
 ## Target Audience
-- DevOps Engineers managing cloud resources and terraform code
+- Platform Engineers managing cloud resources and terraform code
 - Security Engineers focused on secrets management and access control
 - Terraform Users currently using HashiCorp Vault or AWS Secrets Manager
 - Organizations seeking advanced secret management tools with role based access control
