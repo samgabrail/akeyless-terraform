@@ -106,12 +106,26 @@ This creates:
 - ✅ Static secrets (API key, DB config)
 
 
-### Step 4: Generate API Key for Part 2
+### Step 4: Reset and Retrieve API Credentials for Part 2
 
-In the Akeyless console:
-1. Go to the authentication method created in Part 1
-2. Generate new **Access ID** and **Access Key**
-3. Update `part2-infrastructure-deployment/terraform.tfvars` with these values
+After Part 1 completes, you need to reset the access key for the newly created authentication method to ensure credentials are not stored in Terraform state:
+
+**Reset Access Key via Akeyless Console:**
+1. Navigate to **Access** → **Auth Methods** in your Akeyless console
+2. Find the auth method created in Part 1: `/terraform-demo/auth-method`
+3. Click on the auth method and go to the **Access** tab
+4. Click **Reset Access Key** to generate new credentials
+5. Copy the new **Access ID** and **Access Key** 
+
+**Update Part 2 Configuration:**
+6. Edit `part2-infrastructure-deployment/terraform.tfvars`
+7. Update the following values with your new credentials:
+   ```hcl
+   akeyless_access_id  = "p-xxxxxx"  # New Access ID from reset
+   akeyless_access_key = "xxxxxxx"   # New Access Key from reset
+   ```
+
+> **Security Note**: We reset the access key to ensure that the credentials used in Part 2 are never stored in Terraform's state file from Part 1. This follows security best practices by keeping infrastructure setup credentials separate from runtime access credentials.
 
 ### Step 5: Run Part 2 - Infrastructure Deployment
 
@@ -195,9 +209,11 @@ demo/
 
 ### Part 2 Demo (6-8 minutes)
 
-1. **Generate API Key** (1 min)
-   - Show how to generate access credentials from Part 1 auth method
-   - Update terraform.tfvars
+1. **Reset and Retrieve API Credentials** (1-2 mins)
+   - Navigate to the auth method created in Part 1
+   - Reset the access key to generate fresh credentials
+   - Explain why we reset (security best practice to avoid state storage)
+   - Update terraform.tfvars with new credentials
 
 2. **Deploy Infrastructure** (4-5 mins)
    - Show the Terraform configuration that retrieves static secrets
@@ -212,19 +228,24 @@ demo/
 
 ## 🧹 Cleanup
 
-To destroy all resources created during the demo:
+To destroy all resources created during the demo, **follow this specific order** to avoid dependency issues:
 
 ```bash
-# Run the cleanup script
+# Run the cleanup script (automatically handles correct order)
 ./cleanup.sh
 
-# Or manually:
+# Or manually (IMPORTANT: Destroy Part 2 first, then Part 1):
+
+# Step 1: Destroy Part 2 Infrastructure (AWS resources)
 cd part2-infrastructure-deployment
 terraform destroy
 
+# Step 2: Destroy Part 1 Infrastructure (Akeyless resources)
 cd ../part1-akeyless-setup  
 terraform destroy
 ```
+
+> **⚠️ Cleanup Order is Critical**: Always destroy Part 2 before Part 1. Part 2 uses credentials and accesses secrets created in Part 1, so destroying Part 1 first would break the authentication needed for Part 2 cleanup.
 
 ## 🚧 Troubleshooting
 

@@ -166,6 +166,9 @@ resource "akeyless_role_rule" "static_access" {
 
 This completes our access control setup, applying the least privilege principle to ensure only authorized access to our secrets secure storage.
 
+### Transition: Credential Reset for Security
+**Critical Step**: Between Part 1 and Part 2, we reset the access key for the newly created authentication method. This ensures that the credentials used for infrastructure deployment in Part 2 are never stored in Terraform's state file from Part 1, following security best practices for separating setup credentials from runtime access credentials.
+
 ### Part 2: Using Akeyless Secrets to Build Infrastructure  
 **Use Case**: Leveraging secret management tools for secure cloud services deployment
 
@@ -358,8 +361,11 @@ Our demonstration showcases a practical two-part workflow for managing sensitive
 ### Part 1: Infrastructure as Code for Static Secret Management (5-7 minutes)
 We use terraform code to configure our entire secrets management infrastructure, creating authentication methods with role based access control, and securely storing static secrets including database credentials, API keys, and configuration data. This infrastructure as code approach ensures reproducible, version-controlled secrets management while maintaining compliance with version control systems best practices.
 
+### Credential Reset Transition: Security Best Practice (1-2 minutes)
+After Part 1 completes, we reset the access key for the newly created authentication method in the Akeyless console. This critical step ensures that credentials used in Part 2 are never stored in Terraform's state file from Part 1, demonstrating proper separation between infrastructure setup credentials and runtime access credentials.
+
 ### Part 2: Secure Cloud Resources Deployment Using Static Secrets (6-8 minutes)  
-We read static secrets and configuration data from our secret management tools at runtime, then use this information to provision AWS cloud resources including DynamoDB tables with sample data. This demonstrates how sensitive information flows securely through your cloud infrastructure without ever being exposed in terraform configuration files or code repositories, providing superior protection against data breaches.
+Using the fresh credentials from the reset process, we read static secrets and configuration data from our secret management tools at runtime, then use this information to provision AWS cloud resources including DynamoDB tables with sample data. This demonstrates how sensitive information flows securely through your cloud infrastructure without ever being exposed in terraform configuration files or code repositories, providing superior protection against data breaches.
 
 ## Akeyless Architecture & Benefits: Advanced Secret Management Tools vs Traditional Solutions
 
@@ -414,6 +420,32 @@ Get started with Akeyless free for 30 days, no credit card required. The SaaS pl
 
 ### 3. Migration Support from HashiCorp Vault and AWS Secrets Manager
 Our solutions architects provide free consultation to help plan your migration from existing secret management tools. We've helped hundreds of teams transition from HashiCorp Vault, AWS Secrets Manager, and other traditional secrets manager platforms to our advanced secret rotation and role based access control system.
+
+## Demo Cleanup: Best Practices for Infrastructure Destruction
+
+After completing both parts of the demonstration, proper cleanup follows a specific order to prevent authentication failures and dependency issues:
+
+### Critical Cleanup Order for Terraform Secrets Management
+
+**Step 1: Destroy Part 2 Infrastructure First**
+```bash
+cd part2-infrastructure-deployment
+terraform destroy
+```
+This removes the AWS cloud resources (DynamoDB table and sample data) that depend on credentials and secrets from Part 1.
+
+**Step 2: Destroy Part 1 Infrastructure Second**  
+```bash
+cd ../part1-akeyless-setup
+terraform destroy
+```
+This removes the Akeyless secrets management infrastructure including authentication methods, static secrets, and access control policies.
+
+### Why This Order Matters for Managing Secrets
+
+Part 2 uses credentials and accesses secrets created in Part 1. If you destroy Part 1 first, the authentication needed for Part 2 cleanup will fail, leaving orphaned cloud resources. This demonstrates the dependency relationship between secrets management infrastructure and the applications that consume those secrets - a key consideration when managing sensitive data in production environments.
+
+This cleanup order reflects real-world best practices: always destroy consuming services before destroying the secret management tools and configuration data they depend on, ensuring complete infrastructure as code lifecycle management.
 
 ## Frequently Asked Questions (FAQ)
 

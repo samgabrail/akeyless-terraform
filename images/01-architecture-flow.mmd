@@ -8,6 +8,11 @@ graph TB
         A3 --> A7[("🔐<br/>Secrets Management<br/>Infrastructure")]
     end
     
+    subgraph CR["Credential Reset"]
+        C1[("🔄<br/>Reset Access Key")] --> C2[Fresh Credentials]
+        C2 --> C3[Update Part 2 Config]
+    end
+    
     subgraph P2["Part 2: Build Infra"]
         B1[("🔐<br/>Akeyless<br/>Static Secrets")] --> B2[Terraform Data Sources]
         B2 --> B3[Retrieved Secrets]
@@ -17,8 +22,12 @@ graph TB
         B5 --> B7[("☁️<br/>Cloud<br/>Infrastructure")]
     end
     
-    A7 -.->|"Secrets Available"| B1
+    A7 -.->|"Auth Method Created"| C1
+    C3 -.->|"New Credentials"| B1
     
     style A7 fill:#e1f5fe
     style B7 fill:#f3e5f5
     style B1 fill:#e8f5e8
+    style C1 fill:#fff3e0
+    style C2 fill:#fff3e0
+    style C3 fill:#fff3e0
